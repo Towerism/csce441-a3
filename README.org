@@ -1,0 +1,32 @@
+#+TITLE: CSCE 441 Assignment 3
+#+AUTHOR: Martin Fracker
+* Checklist
+- Capturing user polygon input correctly
+- Scan converting input polygons
+- Different Color for each scanned polygon
+- Mode transition to clip mode
+- Clip rectangle capture and scan conversion as click and drag
+- Clipping of polygons and scan conversion of clipped polygons
+* Platform
+- Program written and tested on Linux 64-bit.
+- Requires a c++11 compatible compiler
+* Makefile
+Written for GCC on *nix platforms. Requires libglut, libGL, and libGLU to be in
+$PATH
+** Changing compile and linking flags
+The Makefile can set the environment variables automatically but only if they
+are not previously exported. If the Makefile seems to be broken, one or all of
+the environment variables probably need to be re-exported.
+#+BEGIN_SRC
+$ export CXXFLAGS=-std=c++11 -I.
+$ export LDFLAGS=-lglut -lGL -lGLU
+$ export CXX=g++
+$ make all
+#+END_SRC
+** Running
+Run ~./main~ if it exists otherwise it must be compiled. See above if there are
+compiler errors.
+#+BEGIN_SRC
+$ make all
+$ ./main
+#+END_SRC
