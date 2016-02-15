@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
 	glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB);
 	glutInitWindowSize(ImageW,ImageH);
 	glutInitWindowPosition(100,100);
-	glutCreateWindow("<Your name> - Homework 2");
+	glutCreateWindow("Martin Fracker - Homework 2");
 	init();	
 	glutDisplayFunc(display);
 	glutMainLoop();
