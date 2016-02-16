@@ -6,6 +6,8 @@
 //  file LICENSE in the root directory or visit
 //  www.gnu.org/licenses/gpl-3.0.en.html for license terms.
 
+#include "util/vector2.hh"
+
 #include<GL/glut.h>
 
 /******************************************************************
@@ -18,12 +20,12 @@
     routine you use to set the color (other than clearing the
     entire framebuffer).  drawit() will cause the current
     framebuffer to be displayed.
-  As is, your scan conversion should probably be called from
+  As is,  your scan conversion should probably be called from
     within the display function.  There is a very short sample
     of code there now.
-  You may add code to any of the subroutines here,  You probably
-    want to leave the drawit, clearFramebuffer, and
-    setFramebuffer commands alone, though.
+  You may add code to any of the subroutines here,   You probably
+    want to leave the drawit,  clearFramebuffer,  and
+    setFramebuffer commands alone,  though.
   *****************************************************************/
 
 #define ImageW 400
@@ -31,20 +33,20 @@
 
 float framebuffer[ImageH][ImageW][3];
 
-struct color {
-  float r, g, b;    // Color (R,G,B values)
+struct Color {
+  float r, g, b;    // Color (R, G, B values)
 };
 
 
 // Draws the scene
 void drawit(void) {
-  glDrawPixels(ImageW,ImageH,GL_RGB,GL_FLOAT,framebuffer);
+  glDrawPixels(ImageW, ImageH, GL_RGB, GL_FLOAT, framebuffer);
   glFlush();
 }
 
 // Clears framebuffer to black
 void clearFramebuffer() {
-  int i,j;
+  int i, j;
 
   for(i=0;i<ImageH;i++) {
     for (j=0;j<ImageW;j++) {
@@ -55,40 +57,38 @@ void clearFramebuffer() {
   }
 }
 
-// Sets pixel x,y to the color RGB
+float clampFloat(float f) {
+  if (f < 0.0)
+    return 0.0;
+  if (f > 1.0)
+    return 1.0;
+  return f;
+}
+
+// make sure color values are between 0 and 1
+Color clampColorValues(Color color) {
+  return {clampFloat(color.r), clampFloat(color.g), clampFloat(color.b) };
+}
+
+// Sets pixel x, y to the color RGB
 // I've made a small change to this function to make the pixels match
 // those returned by the glutMouseFunc exactly - Scott Schaefer 
-void setFramebuffer(int x, int y, float R, float G, float B) {
+// Made the function less ugly - Martin Fracker
+void setFramebuffer(Vector2 position, Color color) {
+  color = clampColorValues(color);
   // changes the origin from the lower-left corner to the upper-left corner
-  y = ImageH - 1 - y;
-  if (R<=1.0)
-    if (R>=0.0)
-      framebuffer[y][x][0]=R;
-    else
-      framebuffer[y][x][0]=0.0;
-  else
-    framebuffer[y][x][0]=1.0;
-  if (G<=1.0)
-    if (G>=0.0)
-      framebuffer[y][x][1]=G;
-    else
-      framebuffer[y][x][1]=0.0;
-  else
-    framebuffer[y][x][1]=1.0;
-  if (B<=1.0)
-    if (B>=0.0)
-      framebuffer[y][x][2]=B;
-    else
-      framebuffer[y][x][2]=0.0;
-  else
-    framebuffer[y][x][2]=1.0;
+  position.y = ImageH - 1 - position.y;
+
+  framebuffer[position.y][position.x][0]=color.r;
+  framebuffer[position.y][position.x][1]=color.g;
+  framebuffer[position.y][position.x][2]=color.b;
 }
 
 void display(void) {
   //The next two lines of code are for demonstration only.
-  //They show how to draw a line from (0,0) to (100,100)
+  //They show how to draw a line from (0, 0) to (100, 100)
   int i;
-  for(i=0;i<=100;i++) setFramebuffer(i,i,1.0,1.0,1.0);
+  for(i=0;i<=100;i++) setFramebuffer({i, i}, {1.0, 1.0, 1.0});
 
   drawit();
 }
@@ -97,14 +97,11 @@ void init(void) {
   clearFramebuffer();
 }
 
-void mouse(int button, int status, int x, int y) {
-}
-
-int main(int argc, char** argv) {
-  glutInit(&argc,argv);
+int main(int argc,  char** argv) {
+  glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB);
-  glutInitWindowSize(ImageW,ImageH);
-  glutInitWindowPosition(100,100);
+  glutInitWindowSize(ImageW, ImageH);
+  glutInitWindowPosition(100, 100);
   glutCreateWindow("Martin Fracker - Homework 2");
   init();  
   glutDisplayFunc(display);
