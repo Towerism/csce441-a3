@@ -75,10 +75,10 @@ Color clampColorValues(Color color) {
 // those returned by the glutMouseFunc exactly - Scott Schaefer 
 // Made the function less ugly - Martin Fracker
 void setFramebuffer(Vector2 position, Color color) {
-  color = clampColorValues(color);
   // changes the origin from the lower-left corner to the upper-left corner
   position.y = ImageH - 1 - position.y;
 
+  color = clampColorValues(color);
   framebuffer[position.y][position.x][0] = color.r;
   framebuffer[position.y][position.x][1] = color.g;
   framebuffer[position.y][position.x][2] = color.b;
