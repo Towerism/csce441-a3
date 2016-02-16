@@ -67,7 +67,7 @@ float clampFloat(float f) {
 
 // make sure color values are between 0 and 1
 Color clampColorValues(Color color) {
-  return {clampFloat(color.r), clampFloat(color.g), clampFloat(color.b) };
+  return { clampFloat(color.r), clampFloat(color.g), clampFloat(color.b) };
 }
 
 // Sets pixel x, y to the color RGB
