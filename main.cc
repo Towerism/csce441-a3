@@ -8,7 +8,10 @@
 
 #include "util/vector2.hh"
 
-#include<GL/glut.h>
+#include <GL/glut.h>
+#include <iostream>
+#include <list>
+#include <vector>
 
 /******************************************************************
   Notes:
@@ -37,6 +40,39 @@ struct Color {
   float r, g, b;    // Color (R, G, B values)
 };
 
+struct Edge {
+  Vector2 start;
+  Vector2 end;
+  int maxY, currentX;
+  float xIncr;
+};
+
+std::vector<Edge> makeEdges(std::vector<Vector2> points) {
+  std::vector<Edge> edges;
+  for (int i = 0; i < points.size(); ++i) {
+    edges.push_back({ points[i] });
+    if (i + 1 != points.size())
+      edges.back().end = points[i + 1];
+  }
+  edges.back().end = points.front();
+  return edges;
+}
+
+void printEdges(std::vector<Edge> edges) {
+  std::cout << "BEGIN EDGES" << std::endl;
+  for (auto edge : edges) {
+    std::cout << "  BEGIN EDGE" << std::endl;
+    std::cout << "    START: ( " << edge.start.x << ", " << edge.start.y << " )" << std::endl;
+    std::cout << "    END: ( " << edge.end.x << ", " << edge.end.y << " )" << std::endl;
+    std::cout << "  END EDGE" << std::endl;
+  }
+  std::cout << "END EDGES" << std::endl;
+}
+
+void scanfill(std::vector<Vector2> points) {
+  std::vector<Edge> edges = makeEdges(points);
+  printEdges(edges);
+}
 
 // Draws the scene
 void drawit(void) {
@@ -97,6 +133,24 @@ void init(void) {
   clearFramebuffer();
 }
 
+std::vector<Vector2> points;
+
+void mouse(int button, int status, int x, int y) {
+  switch(button) {
+  case GLUT_LEFT_BUTTON:
+    if (status == GLUT_UP)
+      break;
+    points.push_back({ x, y });
+    break;
+  case GLUT_RIGHT_BUTTON:
+    if (status == GLUT_UP)
+      break;
+    points.push_back({ x, y });
+    scanfill(points);
+    break;
+  }
+}
+
 int main(int argc,  char** argv) {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB);
@@ -105,6 +159,7 @@ int main(int argc,  char** argv) {
   glutCreateWindow("Martin Fracker - Homework 2");
   init();  
   glutDisplayFunc(display);
+  glutMouseFunc(mouse);
   glutMainLoop();
   return 0;
 }
