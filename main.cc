@@ -79,9 +79,9 @@ void setFramebuffer(Vector2 position, Color color) {
   // changes the origin from the lower-left corner to the upper-left corner
   position.y = ImageH - 1 - position.y;
 
-  framebuffer[position.y][position.x][0]=color.r;
-  framebuffer[position.y][position.x][1]=color.g;
-  framebuffer[position.y][position.x][2]=color.b;
+  framebuffer[position.y][position.x][0] = color.r;
+  framebuffer[position.y][position.x][1] = color.g;
+  framebuffer[position.y][position.x][2] = color.b;
 }
 
 void display(void) {
