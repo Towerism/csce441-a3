@@ -117,9 +117,8 @@ void drawPointsBuffer() {
   glBegin(GL_LINE_STRIP);
   glColor3f(1.0, 1.0, 1.0);
   for (auto point : pointsBuffer) {
-    glVertex2i(point.x, ImageH - point.y - 1);
+    glVertex2i(point.x, point.y);
   }
-  glVertex2i(0,0);
   glEnd();
 }
 
@@ -138,7 +137,7 @@ void init(void) {
   glViewport(0, 0, (GLsizei)ImageW, (GLsizei)ImageH);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluOrtho2D(0.0, ImageW, 0.0, ImageH);
+  gluOrtho2D(0.0, ImageW, ImageH, 0.0);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }
