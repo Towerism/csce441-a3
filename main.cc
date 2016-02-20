@@ -6,6 +6,7 @@
 //  file LICENSE in the root directory or visit
 //  www.gnu.org/licenses/gpl-3.0.en.html for license terms.
 
+#include "clip/rectangle.hh"
 #include "scan/activeEdgeList.hh"
 #include "scan/activeEdgeTable.hh"
 #include "scan/color.hh"
@@ -22,32 +23,19 @@
 #include <utility>
 #include <vector>
 
-/******************************************************************
-  Notes:
-  Image size is 400 by 400 by default.  You may adjust this if
-    you want to.
-  You can assume the window will NOT be resized.
-  Call clearFramebuffer to clear the entire framebuffer.
-  Call setFramebuffer to set a pixel.  This should be the only
-    routine you use to set the color (other than clearing the
-    entire framebuffer).  drawit() will cause the current
-    framebuffer to be displayed.
-  As is,  your scan conversion should probably be called from
-    within the display function.  There is a very short sample
-    of code there now.
-  You may add code to any of the subroutines here,   You probably
-    want to leave the drawit,  clearFramebuffer,  and
-    setFramebuffer commands alone,  though.
-  *****************************************************************/
-
 #define ImageW 800
 #define ImageH 600
+
+enum class Mode { Scanning, Clipping } mode;
 
 float framebuffer[ImageH][ImageW][3];
 std::vector<Vector2> pointsBuffer;
 std::vector<Polygon> polygons;
 std::default_random_engine generator;
 std::uniform_real_distribution<float> distribution(0.0, 1.0);
+Rectangle clippingRect;
+bool clip = false;
+bool drawingClippingRect = false;
 
 // Clears framebuffer to black
 void clearFramebuffer() {
@@ -122,13 +110,38 @@ void drawPointsBuffer() {
   glEnd();
 }
 
+void clipPolygon(Polygon polygon, Rectangle rect) {
+  
+}
+
+void clipPolygons() {
+  if (clip) {
+    for (auto& polygon : polygons)
+      clipPolygon(polygon, clippingRect);
+  }
+}
+
+void drawClippingRect() {
+  if (!drawingClippingRect)
+    return;
+  glBegin(GL_LINE_LOOP);
+  glColor3f(1.0, 1.0, 1.0);
+  glVertex2i(clippingRect.p1.x, clippingRect.p1.y);
+  glVertex2i(clippingRect.p2.x, clippingRect.p1.y);
+  glVertex2i(clippingRect.p2.x, clippingRect.p2.y);
+  glVertex2i(clippingRect.p1.x, clippingRect.p2.y);
+  glEnd();
+}
+
 void display(void) {
   clearFramebuffer();
   glClear(GL_COLOR_BUFFER_BIT);
+  clipPolygons();
   for (auto polygon : polygons)
     scanfill(polygon.points, polygon.color);
   glDrawPixels(ImageW, ImageH, GL_RGB, GL_FLOAT, framebuffer);
   drawPointsBuffer();
+  drawClippingRect();
   glFlush();
 }
 
@@ -140,6 +153,7 @@ void init(void) {
   gluOrtho2D(0.0, ImageW, ImageH, 0.0);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
+  mode = Mode::Scanning;
 }
 
 bool addToPointsBuffer(Vector2 point) {
@@ -160,17 +174,30 @@ Color randomColor() {
   return color;
 }
 
+bool settingClippingRectP2 = false;
 void mouse(int button, int status, int x, int y) {
   switch(button) {
   case GLUT_LEFT_BUTTON:
-    if (status == GLUT_UP)
-      break;
-    addToPointsBuffer({ x, y });
+    if (status != GLUT_UP) {
+      if (mode == Mode::Scanning)
+        addToPointsBuffer({ x, y });
+      else
+        if (!settingClippingRectP2 && !clip) {
+          settingClippingRectP2 = true;
+          clippingRect.p1 = { x, y };
+        }
+    } else {
+      if (drawingClippingRect) {
+        drawingClippingRect = false;
+        settingClippingRectP2 = false;
+        clip = true;
+      }
+    }
     break;
   case GLUT_RIGHT_BUTTON:
     if (status == GLUT_UP)
       break;
-    if (pointsBuffer.size() > 1) {
+    if (mode == Mode::Scanning && pointsBuffer.size() > 1) {
       if (addToPointsBuffer({ x, y })) {
         Color color = randomColor();
         polygons.emplace_back(pointsBuffer, color);
@@ -182,6 +209,19 @@ void mouse(int button, int status, int x, int y) {
   glutPostRedisplay();
 }
 
+void motion(int x, int y) {
+  if (settingClippingRectP2 && !clip) {
+    clippingRect.p2 = { x, y };
+    drawingClippingRect = true;
+    glutPostRedisplay();
+  }
+}
+
+void keyboard(unsigned char c, int x, int y) {
+  if (c == 'c')
+    mode = Mode::Clipping;
+}
+
 int main(int argc,  char** argv) {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB);
@@ -191,6 +231,8 @@ int main(int argc,  char** argv) {
   init();  
   glutDisplayFunc(display);
   glutMouseFunc(mouse);
+  glutMotionFunc(motion);
+  glutKeyboardFunc(keyboard);
   glutMainLoop();
   return 0;
 }
