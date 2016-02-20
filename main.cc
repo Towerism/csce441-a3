@@ -113,20 +113,34 @@ void scanfill(std::vector<Vector2> points, Color color) {
   }
 }
 
-// Draws the scene
-void drawit(void) {
-  glDrawPixels(ImageW, ImageH, GL_RGB, GL_FLOAT, framebuffer);
-  glFlush();
+void drawPointsBuffer() {
+  glBegin(GL_LINE_STRIP);
+  glColor3f(1.0, 1.0, 1.0);
+  for (auto point : pointsBuffer) {
+    glVertex2i(point.x, ImageH - point.y - 1);
+  }
+  glVertex2i(0,0);
+  glEnd();
 }
 
 void display(void) {
+  clearFramebuffer();
+  glClear(GL_COLOR_BUFFER_BIT);
   for (auto polygon : polygons)
     scanfill(polygon.points, polygon.color);
-  drawit();
+  glDrawPixels(ImageW, ImageH, GL_RGB, GL_FLOAT, framebuffer);
+  drawPointsBuffer();
+  glFlush();
 }
 
 void init(void) {
   clearFramebuffer();
+  glViewport(0, 0, (GLsizei)ImageW, (GLsizei)ImageH);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(0.0, ImageW, 0.0, ImageH);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
 }
 
 bool addToPointsBuffer(Vector2 point) {
@@ -162,11 +176,11 @@ void mouse(int button, int status, int x, int y) {
         Color color = randomColor();
         polygons.emplace_back(pointsBuffer, color);
         pointsBuffer.clear();
-        glutPostRedisplay();
       }
     }
     break;
   }
+  glutPostRedisplay();
 }
 
 int main(int argc,  char** argv) {
