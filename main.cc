@@ -6,11 +6,20 @@
 //  file LICENSE in the root directory or visit
 //  www.gnu.org/licenses/gpl-3.0.en.html for license terms.
 
+#include "scan/activeEdgeList.hh"
+#include "scan/activeEdgeTable.hh"
+#include "scan/color.hh"
+#include "scan/edge.hh"
+#include "scan/polygon.hh"
 #include "util/vector2.hh"
 
+#include <algorithm>
 #include <GL/glut.h>
 #include <iostream>
 #include <list>
+#include <limits>
+#include <random>
+#include <utility>
 #include <vector>
 
 /******************************************************************
@@ -35,54 +44,14 @@
 #define ImageH 400
 
 float framebuffer[ImageH][ImageW][3];
-
-struct Color {
-  float r, g, b;    // Color (R, G, B values)
-};
-
-struct Edge {
-  Vector2 start;
-  Vector2 end;
-  int maxY, currentX;
-  float xIncr;
-};
-
-std::vector<Edge> makeEdges(std::vector<Vector2> points) {
-  std::vector<Edge> edges;
-  for (int i = 0; i < points.size(); ++i) {
-    edges.push_back({ points[i] });
-    if (i + 1 != points.size())
-      edges.back().end = points[i + 1];
-  }
-  edges.back().end = points.front();
-  return edges;
-}
-
-void printEdges(std::vector<Edge> edges) {
-  std::cout << "BEGIN EDGES" << std::endl;
-  for (auto edge : edges) {
-    std::cout << "  BEGIN EDGE" << std::endl;
-    std::cout << "    START: ( " << edge.start.x << ", " << edge.start.y << " )" << std::endl;
-    std::cout << "    END: ( " << edge.end.x << ", " << edge.end.y << " )" << std::endl;
-    std::cout << "  END EDGE" << std::endl;
-  }
-  std::cout << "END EDGES" << std::endl;
-}
-
-void scanfill(std::vector<Vector2> points) {
-  std::vector<Edge> edges = makeEdges(points);
-  printEdges(edges);
-}
-
-// Draws the scene
-void drawit(void) {
-  glDrawPixels(ImageW, ImageH, GL_RGB, GL_FLOAT, framebuffer);
-  glFlush();
-}
+std::vector<Vector2> pointsBuffer;
+std::vector<Polygon> polygons;
+std::default_random_engine generator;
+std::uniform_real_distribution<float> distribution(0.0, 1.0);
 
 // Clears framebuffer to black
 void clearFramebuffer() {
-  int i, j;
+  std::size_t i, j;
 
   for(i=0;i<ImageH;i++) {
     for (j=0;j<ImageW;j++) {
@@ -115,17 +84,47 @@ void setFramebuffer(Vector2 position, Color color) {
   position.y = ImageH - 1 - position.y;
 
   color = clampColorValues(color);
+  if (position.y < 0 || position.y > ImageH ||
+      position.x < 0 || position.x > ImageW)
+    return;
   framebuffer[position.y][position.x][0] = color.r;
   framebuffer[position.y][position.x][1] = color.g;
   framebuffer[position.y][position.x][2] = color.b;
 }
 
-void display(void) {
-  //The next two lines of code are for demonstration only.
-  //They show how to draw a line from (0, 0) to (100, 100)
-  int i;
-  for(i=0;i<=100;i++) setFramebuffer({i, i}, {1.0, 1.0, 1.0});
+inline void drawScanLine(int y, int startX, int endX, Color color) {
+  for (int x = startX; x < endX - 1; ++x) {
+    setFramebuffer({x, y}, color);
+  }
+}
 
+inline void scanfill(std::vector<Vector2> points, Color color) {
+  std::list<Edge> edges = makeEdges(points);
+  
+  ActiveEdgeTable edgeTable = makeActiveEdgeTable(edges);
+  ActiveEdgeList edgeList(findMinYFromEdges(edges));
+  int size = 0;
+  for (auto list : edgeTable) {
+    ++size;
+    edgeList.add(list);
+    for (std::size_t i = 0; i < edgeList.size(); i += 2) {
+      drawScanLine(edgeList.getCurrentY(),
+                   edgeList[i].currentX,
+                   edgeList[i + 1].currentX,
+                   color);
+    }
+  }
+}
+
+// Draws the scene
+void drawit(void) {
+  glDrawPixels(ImageW, ImageH, GL_RGB, GL_FLOAT, framebuffer);
+  glFlush();
+}
+
+void display(void) {
+  for (auto polygon : polygons)
+    scanfill(polygon.points, polygon.color);
   drawit();
 }
 
@@ -133,20 +132,42 @@ void init(void) {
   clearFramebuffer();
 }
 
-std::vector<Vector2> points;
+bool addToPointsBuffer(Vector2 point) {
+  auto it = std::find_if(pointsBuffer.begin(), pointsBuffer.end(),
+                         [point](Vector2 pt) { return point == pt; });
+  if (it == pointsBuffer.end()) {
+    pointsBuffer.push_back(point);
+    return true;
+  }
+  return false;
+}
+
+Color randomColor() {
+  Color color;
+  color.r = distribution(generator);
+  color.g = distribution(generator);
+  color.b = distribution(generator);
+  return color;
+}
 
 void mouse(int button, int status, int x, int y) {
   switch(button) {
   case GLUT_LEFT_BUTTON:
     if (status == GLUT_UP)
       break;
-    points.push_back({ x, y });
+    addToPointsBuffer({ x, y });
     break;
   case GLUT_RIGHT_BUTTON:
     if (status == GLUT_UP)
       break;
-    points.push_back({ x, y });
-    scanfill(points);
+    if (pointsBuffer.size() > 1) {
+      if (addToPointsBuffer({ x, y })) {
+        Color color = randomColor();
+        polygons.emplace_back(pointsBuffer, color);
+        pointsBuffer.clear();
+        glutPostRedisplay();
+      }
+    }
     break;
   }
 }
