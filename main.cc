@@ -40,8 +40,8 @@
     setFramebuffer commands alone,  though.
   *****************************************************************/
 
-#define ImageW 400
-#define ImageH 400
+#define ImageW 800
+#define ImageH 600
 
 float framebuffer[ImageH][ImageW][3];
 std::vector<Vector2> pointsBuffer;
