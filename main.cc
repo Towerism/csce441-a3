@@ -92,20 +92,17 @@ void setFramebuffer(Vector2 position, Color color) {
   framebuffer[position.y][position.x][2] = color.b;
 }
 
-inline void drawScanLine(int y, int startX, int endX, Color color) {
+void drawScanLine(int y, int startX, int endX, Color color) {
   for (int x = startX; x < endX - 1; ++x) {
     setFramebuffer({x, y}, color);
   }
 }
 
-inline void scanfill(std::vector<Vector2> points, Color color) {
+void scanfill(std::vector<Vector2> points, Color color) {
   std::list<Edge> edges = makeEdges(points);
-  
   ActiveEdgeTable edgeTable = makeActiveEdgeTable(edges);
   ActiveEdgeList edgeList(findMinYFromEdges(edges));
-  int size = 0;
   for (auto list : edgeTable) {
-    ++size;
     edgeList.add(list);
     for (std::size_t i = 0; i < edgeList.size(); i += 2) {
       drawScanLine(edgeList.getCurrentY(),
