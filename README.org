@@ -9,7 +9,7 @@
 - Clipping of polygons and scan conversion of clipped polygons
 * Platform
 - Program written and tested on Linux 64-bit.
-- Requires a c++11 compatible compiler
+- Requires a c++14 compatible compiler
 * Makefile
 Written for GCC on *nix platforms. Requires libglut, libGL, and libGLU to be in
 $PATH
@@ -18,7 +18,7 @@ The Makefile can set the environment variables automatically but only if they
 are not previously exported. If the Makefile seems to be broken, one or all of
 the environment variables probably need to be re-exported.
 #+BEGIN_SRC
-$ export CXXFLAGS=-std=c++11 -I.
+$ export CXXFLAGS=-std=c++14 -I.
 $ export LDFLAGS=-lglut -lGL -lGLU
 $ export CXX=g++
 $ make all
