@@ -12,3 +12,7 @@ struct Polygon {
   std::vector<Vector2> points;
   Color color;
 };
+
+bool operator==(Polygon lhs, Polygon rhs) {
+  return lhs.points == rhs.points && lhs.color == rhs.color;
+}

@@ -110,15 +110,164 @@ void drawPointsBuffer() {
   glEnd();
 }
 
-void clipPolygon(Polygon polygon, Rectangle rect) {
+Vector2 findIntersection(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4) {
+  float  distAB, theCos, theSin, newX, ABpos ;
+
+  //  (1) Translate the system so that point A is on the origin.
+  p2.x-=p1.x; p2.y-=p1.y;
+  p3.x-=p1.x; p3.y-=p1.y;
+  p4.x-=p1.x; p4.y-=p1.y;
+
+  //  Discover the length of segment A-B.
+  distAB=sqrt(p2.x*p2.x+p2.y*p2.y);
+
+  //  (2) Rotate the system so that point B is on the positive X axis.
+  theCos=p2.x/distAB;
+  theSin=p2.y/distAB;
+  newX=p3.x*theCos+p3.y*theSin;
+  p3.y  =p3.y*theCos-p3.x*theSin; p3.x=newX;
+  newX=p4.x*theCos+p4.y*theSin;
+  p4.y  =p4.y*theCos-p4.x*theSin; p4.x=newX;
+
+  //  (3) Discover the position of the intersection point along line A-B.
+  ABpos=p4.x+(p3.x-p4.x)*p4.y/(p4.y-p3.y);
+
+  //  (4) Apply the discovered position to line A-B in the original coordinate system.
+  float x = p1.x+ABpos*theCos;
+  float y = p1.y+ABpos*theSin;
+
+  return { (int)x, (int)y };
+
+}
+
+// sorry for the messy code, I can't be bothered to refactor this :)
+void clipPolygon(std::vector<Polygon>::iterator polygon, Rectangle rect) {
+
+  std::vector<Vector2> clippedPoints;
+  if (polygon->points.empty()) {
+    return;
+  }
+  auto S = *(polygon->points.begin());
+  auto E = polygon->points.begin() + 1;
+  Vector2 I;
+  int linePos;
+  linePos = clippingRect.p1.y;
+  std::cout << "clipping against y-axis: " << linePos << std::endl;
+  if (S.x > clippingRect.p1.x &&
+      S.y > clippingRect.p1.y &&
+      S.x < clippingRect.p2.x &&
+      S.y < clippingRect.p2.y)
+    clippedPoints.push_back(S);
+  // clip top bound
+  for (std::size_t i = 0; i <= polygon->points.size(); ++i) {
+    if (S.y > linePos && E->y > linePos) {
+      clippedPoints.push_back(*E);
+    } else if (S.y <= linePos && E->y > linePos) {
+      I = findIntersection(S, *E, {0, clippingRect.p1.y}, {ImageW, clippingRect.p1.y});
+      clippedPoints.push_back(I);
+      clippedPoints.push_back(*E);
+    } else if (S.y > linePos && E->y <= linePos) {
+      I = findIntersection(S, *E, {0, clippingRect.p1.y}, {ImageW, clippingRect.p1.y});
+      clippedPoints.push_back(I);
+    }
+    S = *E;
+    ++E;
+    if (E == polygon->points.end()) {
+      E = polygon->points.begin();
+    }
+  }
+  if (clippedPoints.empty()) {
+    polygon->points = clippedPoints;
+    return;
+  }
+  // clip bottom bound
+  std::vector<Vector2> clippedPoints2;
+  linePos = clippingRect.p2.y;
+  S = *clippedPoints.begin();
+  E = clippedPoints.begin() + 1;
+  for (std::size_t i = 0; i <= clippedPoints.size(); ++i) {
+    if (S.y < linePos && E->y < linePos) {
+      clippedPoints2.push_back(*E);
+    } else if (S.y >= linePos && E->y < linePos) {
+      I = findIntersection(S, *E, {0, clippingRect.p2.y}, {ImageW, clippingRect.p2.y});
+      clippedPoints2.push_back(I);
+      clippedPoints2.push_back(*E);
+    } else if (S.y < linePos && E->y >= linePos) {
+      I = findIntersection(S, *E, {0, clippingRect.p2.y}, {ImageW, clippingRect.p2.y});
+      clippedPoints2.push_back(I);
+    }
+    S = *E;
+    ++E;
+    if (E == clippedPoints.end()) {
+      E = clippedPoints.begin();
+    }
+  }
+  if (clippedPoints2.empty()) {
+    polygon->points = clippedPoints2;
+    return;
+  }
+  // clip left bound
+  std::vector<Vector2> clippedPoints3;
+  linePos = clippingRect.p1.x;
+  S = *clippedPoints2.begin();
+  E = clippedPoints2.begin() + 1;
+  for (std::size_t i = 0; i <= clippedPoints2.size(); ++i) {
+    if (S.x > linePos && E->x > linePos) {
+      clippedPoints3.push_back(*E);
+    } else if (S.x <= linePos && E->x > linePos) {
+      I = findIntersection(S, *E, {clippingRect.p1.x, 0}, {clippingRect.p1.x, ImageH});
+      clippedPoints3.push_back(I);
+      clippedPoints3.push_back(*E);
+    } else if (S.x > linePos && E->x <= linePos) {
+      I = findIntersection(S, *E, {clippingRect.p1.x, 0}, {clippingRect.p1.x, ImageH});
+      clippedPoints3.push_back(I);
+    }
+    S = *E;
+    ++E;
+    if (E == clippedPoints2.end()) {
+      E = clippedPoints2.begin();
+    }
+  }
+  if (clippedPoints3.empty()) {
+    polygon->points = clippedPoints3;
+    return;
+  }
+  // clip right bound
+  std::vector<Vector2> clippedPoints4;
+  linePos = clippingRect.p2.x;
+  S = *clippedPoints3.begin();
+  E = clippedPoints3.begin() + 1;
+  for (std::size_t i = 0; i <= clippedPoints3.size(); ++i) {
+    if (S.x < linePos && E->x < linePos) {
+      clippedPoints4.push_back(*E);
+    } else if (S.x >= linePos && E->x < linePos) {
+      I = findIntersection(S, *E, {clippingRect.p2.x, 0}, {clippingRect.p2.x, ImageH});
+      clippedPoints4.push_back(I);
+      clippedPoints4.push_back(*E);
+    } else if (S.x < linePos && E->x >= linePos) {
+      I = findIntersection(S, *E, {clippingRect.p2.x, 0}, {clippingRect.p2.x, ImageH});
+      clippedPoints4.push_back(I);
+    }
+    S = *E;
+    ++E;
+    if (E == clippedPoints3.end()) {
+      E = clippedPoints3.begin();
+    }
+  }
+  std::cout << "Clipped points size: " << clippedPoints4.size() << std::endl;
+  polygon->points = clippedPoints4;
   
 }
 
+void normalizeClippingRect() {
+  if (clippingRect.p1.y > clippingRect.p2.y)
+    std::swap(clippingRect.p1, clippingRect.p2);
+}
+
 void clipPolygons() {
-  if (clip) {
-    for (auto& polygon : polygons)
-      clipPolygon(polygon, clippingRect);
-  }
+  normalizeClippingRect();
+  for (auto it = polygons.begin(); it != polygons.end(); ++it)
+    clipPolygon(it, clippingRect);
 }
 
 void drawClippingRect() {
@@ -136,9 +285,9 @@ void drawClippingRect() {
 void display(void) {
   clearFramebuffer();
   glClear(GL_COLOR_BUFFER_BIT);
-  clipPolygons();
   for (auto polygon : polygons)
-    scanfill(polygon.points, polygon.color);
+    if (!polygon.points.empty())
+      scanfill(polygon.points, polygon.color);
   glDrawPixels(ImageW, ImageH, GL_RGB, GL_FLOAT, framebuffer);
   drawPointsBuffer();
   drawClippingRect();
@@ -190,6 +339,7 @@ void mouse(int button, int status, int x, int y) {
       if (drawingClippingRect) {
         drawingClippingRect = false;
         settingClippingRectP2 = false;
+        clipPolygons();
         clip = true;
       }
     }
