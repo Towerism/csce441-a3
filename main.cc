@@ -110,36 +110,6 @@ void drawPointsBuffer() {
   glEnd();
 }
 
-Vector2 findIntersection(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4) {
-  float  distAB, theCos, theSin, newX, ABpos ;
-
-  //  (1) Translate the system so that point A is on the origin.
-  p2.x-=p1.x; p2.y-=p1.y;
-  p3.x-=p1.x; p3.y-=p1.y;
-  p4.x-=p1.x; p4.y-=p1.y;
-
-  //  Discover the length of segment A-B.
-  distAB=sqrt(p2.x*p2.x+p2.y*p2.y);
-
-  //  (2) Rotate the system so that point B is on the positive X axis.
-  theCos=p2.x/distAB;
-  theSin=p2.y/distAB;
-  newX=p3.x*theCos+p3.y*theSin;
-  p3.y  =p3.y*theCos-p3.x*theSin; p3.x=newX;
-  newX=p4.x*theCos+p4.y*theSin;
-  p4.y  =p4.y*theCos-p4.x*theSin; p4.x=newX;
-
-  //  (3) Discover the position of the intersection point along line A-B.
-  ABpos=p4.x+(p3.x-p4.x)*p4.y/(p4.y-p3.y);
-
-  //  (4) Apply the discovered position to line A-B in the original coordinate system.
-  float x = p1.x+ABpos*theCos;
-  float y = p1.y+ABpos*theSin;
-
-  return { (int)x, (int)y };
-
-}
-
 // sorry for the messy code, I can't be bothered to refactor this :)
 void clipPolygon(std::vector<Polygon>::iterator polygon, Rectangle rect) {
 
