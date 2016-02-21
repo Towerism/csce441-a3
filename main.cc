@@ -331,7 +331,7 @@ void motion(int x, int y) {
 }
 
 void keyboard(unsigned char c, int x, int y) {
-  if (c == 'c')
+  if (pointsBuffer.empty() && c == 'c')
     mode = Mode::Clipping;
 }
 
