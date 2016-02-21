@@ -44,7 +44,7 @@ inline void rotate(Vector2& vector, float cos, float sin) {
   vector.x = xtemp;
 }
 
-inline Vector2 findIntersection(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4) {
+inline Vector2 intersect(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4) {
   float  mag, cos, sin, relativeIntersect;
   Vector2 intersect = p1;
   // translate coordinate plane so that p1:p2 starts at the origin

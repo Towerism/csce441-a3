@@ -122,22 +122,16 @@ void clipPolygon(std::vector<Polygon>::iterator polygon, Rectangle rect) {
   Vector2 I;
   int linePos;
   linePos = clippingRect.p1.y;
-  std::cout << "clipping against y-axis: " << linePos << std::endl;
-  if (S.x > clippingRect.p1.x &&
-      S.y > clippingRect.p1.y &&
-      S.x < clippingRect.p2.x &&
-      S.y < clippingRect.p2.y)
-    clippedPoints.push_back(S);
   // clip top bound
   for (std::size_t i = 0; i <= polygon->points.size(); ++i) {
     if (S.y > linePos && E->y > linePos) {
       clippedPoints.push_back(*E);
     } else if (S.y <= linePos && E->y > linePos) {
-      I = findIntersection(S, *E, {0, clippingRect.p1.y}, {ImageW, clippingRect.p1.y});
+      I = intersect(S, *E, {0, clippingRect.p1.y}, {ImageW, clippingRect.p1.y});
       clippedPoints.push_back(I);
       clippedPoints.push_back(*E);
     } else if (S.y > linePos && E->y <= linePos) {
-      I = findIntersection(S, *E, {0, clippingRect.p1.y}, {ImageW, clippingRect.p1.y});
+      I = intersect(S, *E, {0, clippingRect.p1.y}, {ImageW, clippingRect.p1.y});
       clippedPoints.push_back(I);
     }
     S = *E;
@@ -159,11 +153,11 @@ void clipPolygon(std::vector<Polygon>::iterator polygon, Rectangle rect) {
     if (S.y < linePos && E->y < linePos) {
       clippedPoints2.push_back(*E);
     } else if (S.y >= linePos && E->y < linePos) {
-      I = findIntersection(S, *E, {0, clippingRect.p2.y}, {ImageW, clippingRect.p2.y});
+      I = intersect(S, *E, {0, clippingRect.p2.y}, {ImageW, clippingRect.p2.y});
       clippedPoints2.push_back(I);
       clippedPoints2.push_back(*E);
     } else if (S.y < linePos && E->y >= linePos) {
-      I = findIntersection(S, *E, {0, clippingRect.p2.y}, {ImageW, clippingRect.p2.y});
+      I = intersect(S, *E, {0, clippingRect.p2.y}, {ImageW, clippingRect.p2.y});
       clippedPoints2.push_back(I);
     }
     S = *E;
@@ -185,11 +179,11 @@ void clipPolygon(std::vector<Polygon>::iterator polygon, Rectangle rect) {
     if (S.x > linePos && E->x > linePos) {
       clippedPoints3.push_back(*E);
     } else if (S.x <= linePos && E->x > linePos) {
-      I = findIntersection(S, *E, {clippingRect.p1.x, 0}, {clippingRect.p1.x, ImageH});
+      I = intersect(S, *E, {clippingRect.p1.x, 0}, {clippingRect.p1.x, ImageH});
       clippedPoints3.push_back(I);
       clippedPoints3.push_back(*E);
     } else if (S.x > linePos && E->x <= linePos) {
-      I = findIntersection(S, *E, {clippingRect.p1.x, 0}, {clippingRect.p1.x, ImageH});
+      I = intersect(S, *E, {clippingRect.p1.x, 0}, {clippingRect.p1.x, ImageH});
       clippedPoints3.push_back(I);
     }
     S = *E;
@@ -211,11 +205,11 @@ void clipPolygon(std::vector<Polygon>::iterator polygon, Rectangle rect) {
     if (S.x < linePos && E->x < linePos) {
       clippedPoints4.push_back(*E);
     } else if (S.x >= linePos && E->x < linePos) {
-      I = findIntersection(S, *E, {clippingRect.p2.x, 0}, {clippingRect.p2.x, ImageH});
+      I = intersect(S, *E, {clippingRect.p2.x, 0}, {clippingRect.p2.x, ImageH});
       clippedPoints4.push_back(I);
       clippedPoints4.push_back(*E);
     } else if (S.x < linePos && E->x >= linePos) {
-      I = findIntersection(S, *E, {clippingRect.p2.x, 0}, {clippingRect.p2.x, ImageH});
+      I = intersect(S, *E, {clippingRect.p2.x, 0}, {clippingRect.p2.x, ImageH});
       clippedPoints4.push_back(I);
     }
     S = *E;
@@ -224,7 +218,6 @@ void clipPolygon(std::vector<Polygon>::iterator polygon, Rectangle rect) {
       E = clippedPoints3.begin();
     }
   }
-  std::cout << "Clipped points size: " << clippedPoints4.size() << std::endl;
   polygon->points = clippedPoints4;
   
 }
