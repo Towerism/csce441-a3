@@ -70,11 +70,6 @@ Color clampColorValues(Color color) {
 void setFramebuffer(Vector2 position, Color color) {
   // changes the origin from the lower-left corner to the upper-left corner
   position.y = ImageH - 1 - position.y;
-
-  color = clampColorValues(color);
-  if (position.y < 0 || position.y > ImageH ||
-      position.x < 0 || position.x > ImageW)
-    return;
   framebuffer[position.y][position.x][0] = color.r;
   framebuffer[position.y][position.x][1] = color.g;
   framebuffer[position.y][position.x][2] = color.b;
