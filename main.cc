@@ -281,7 +281,10 @@ Color randomColor() {
 
 void normalizeClippingRect() {
   if (clippingRect.p1.y > clippingRect.p2.y)
-    std::swap(clippingRect.p1, clippingRect.p2);
+    std::swap(clippingRect.p1.y, clippingRect.p2.y);
+  if (clippingRect.p1.x > clippingRect.p2.x) {
+    std::swap(clippingRect.p1.x, clippingRect.p2.x);
+  }
 }
 
 bool settingClippingRectP2 = false;
