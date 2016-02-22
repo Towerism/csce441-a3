@@ -222,7 +222,6 @@ void clipPolygon(Polygon& polygon, Rectangle rect) {
 }
 
 void clipPolygons() {
-  std::cout << "clipping Rect: " << clippingRect.p1.x << ", " << clippingRect.p1.y << "; " << clippingRect.p2.x << ", " << clippingRect.p2.y << std::endl;
   for (auto& polygon : polygons)
     clipPolygon(polygon, clippingRect);
 }
