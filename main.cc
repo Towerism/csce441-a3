@@ -221,14 +221,8 @@ void clipPolygon(Polygon& polygon, Rectangle rect) {
   polygon.clippedPoints = clippedPoints4;
 }
 
-void normalizeClippingRect() {
-  if (clippingRect.p1.y > clippingRect.p2.y)
-    std::swap(clippingRect.p1, clippingRect.p2);
-}
-
 void clipPolygons() {
   std::cout << "clipping Rect: " << clippingRect.p1.x << ", " << clippingRect.p1.y << "; " << clippingRect.p2.x << ", " << clippingRect.p2.y << std::endl;
-  normalizeClippingRect();
   for (auto& polygon : polygons)
     clipPolygon(polygon, clippingRect);
 }
@@ -286,6 +280,11 @@ Color randomColor() {
   return color;
 }
 
+void normalizeClippingRect() {
+  if (clippingRect.p1.y > clippingRect.p2.y)
+    std::swap(clippingRect.p1, clippingRect.p2);
+}
+
 bool settingClippingRectP2 = false;
 void mouse(int button, int status, int x, int y) {
   switch(button) {
@@ -302,6 +301,7 @@ void mouse(int button, int status, int x, int y) {
       if (drawingClippingRect) {
         drawingClippingRect = false;
         settingClippingRectP2 = false;
+        normalizeClippingRect();
         clipPolygons();
         clip = true;
       }
