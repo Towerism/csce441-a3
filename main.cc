@@ -33,7 +33,7 @@ std::vector<Vector2> pointsBuffer;
 std::vector<Polygon> polygons;
 std::default_random_engine generator;
 std::uniform_real_distribution<float> distribution(0.0, 1.0);
-Rectangle clippingRect;
+Rectangle clippingRect = { { 0, 0 }, { 800, 600 } };
 bool clip = false;
 bool drawingClippingRect = false;
 
@@ -111,53 +111,53 @@ void drawPointsBuffer() {
 }
 
 // sorry for the messy code, I can't be bothered to refactor this :)
-void clipPolygon(std::vector<Polygon>::iterator polygon, Rectangle rect) {
+void clipPolygon(Polygon& polygon, Rectangle rect) {
 
   std::vector<Vector2> clippedPoints;
-  if (polygon->points.empty()) {
+  if (polygon.points.empty()) {
     return;
   }
-  auto S = *(polygon->points.begin());
-  auto E = polygon->points.begin() + 1;
+  auto S = *(polygon.points.begin());
+  auto E = polygon.points.begin() + 1;
   Vector2 I;
   int linePos;
-  linePos = clippingRect.p1.y;
+  linePos = rect.p1.y;
   // clip top bound
-  for (std::size_t i = 0; i <= polygon->points.size(); ++i) {
+  for (std::size_t i = 0; i <= polygon.points.size(); ++i) {
     if (S.y > linePos && E->y > linePos) {
       clippedPoints.push_back(*E);
     } else if (S.y <= linePos && E->y > linePos) {
-      I = intersect(S, *E, {0, clippingRect.p1.y}, {ImageW, clippingRect.p1.y});
+      I = intersect(S, *E, {0, rect.p1.y}, {ImageW, rect.p1.y});
       clippedPoints.push_back(I);
       clippedPoints.push_back(*E);
     } else if (S.y > linePos && E->y <= linePos) {
-      I = intersect(S, *E, {0, clippingRect.p1.y}, {ImageW, clippingRect.p1.y});
+      I = intersect(S, *E, {0, rect.p1.y}, {ImageW, rect.p1.y});
       clippedPoints.push_back(I);
     }
     S = *E;
     ++E;
-    if (E == polygon->points.end()) {
-      E = polygon->points.begin();
+    if (E == polygon.points.end()) {
+      E = polygon.points.begin();
     }
   }
   if (clippedPoints.empty()) {
-    polygon->points = clippedPoints;
+    polygon.clippedPoints = clippedPoints;
     return;
   }
   // clip bottom bound
   std::vector<Vector2> clippedPoints2;
-  linePos = clippingRect.p2.y;
+  linePos = rect.p2.y;
   S = *clippedPoints.begin();
   E = clippedPoints.begin() + 1;
   for (std::size_t i = 0; i <= clippedPoints.size(); ++i) {
     if (S.y < linePos && E->y < linePos) {
       clippedPoints2.push_back(*E);
     } else if (S.y >= linePos && E->y < linePos) {
-      I = intersect(S, *E, {0, clippingRect.p2.y}, {ImageW, clippingRect.p2.y});
+      I = intersect(S, *E, {0, rect.p2.y}, {ImageW, rect.p2.y});
       clippedPoints2.push_back(I);
       clippedPoints2.push_back(*E);
     } else if (S.y < linePos && E->y >= linePos) {
-      I = intersect(S, *E, {0, clippingRect.p2.y}, {ImageW, clippingRect.p2.y});
+      I = intersect(S, *E, {0, rect.p2.y}, {ImageW, rect.p2.y});
       clippedPoints2.push_back(I);
     }
     S = *E;
@@ -167,23 +167,23 @@ void clipPolygon(std::vector<Polygon>::iterator polygon, Rectangle rect) {
     }
   }
   if (clippedPoints2.empty()) {
-    polygon->points = clippedPoints2;
+    polygon.clippedPoints = clippedPoints2;
     return;
   }
   // clip left bound
   std::vector<Vector2> clippedPoints3;
-  linePos = clippingRect.p1.x;
+  linePos = rect.p1.x;
   S = *clippedPoints2.begin();
   E = clippedPoints2.begin() + 1;
   for (std::size_t i = 0; i <= clippedPoints2.size(); ++i) {
     if (S.x > linePos && E->x > linePos) {
       clippedPoints3.push_back(*E);
     } else if (S.x <= linePos && E->x > linePos) {
-      I = intersect(S, *E, {clippingRect.p1.x, 0}, {clippingRect.p1.x, ImageH});
+      I = intersect(S, *E, {rect.p1.x, 0}, {rect.p1.x, ImageH});
       clippedPoints3.push_back(I);
       clippedPoints3.push_back(*E);
     } else if (S.x > linePos && E->x <= linePos) {
-      I = intersect(S, *E, {clippingRect.p1.x, 0}, {clippingRect.p1.x, ImageH});
+      I = intersect(S, *E, {rect.p1.x, 0}, {rect.p1.x, ImageH});
       clippedPoints3.push_back(I);
     }
     S = *E;
@@ -193,23 +193,23 @@ void clipPolygon(std::vector<Polygon>::iterator polygon, Rectangle rect) {
     }
   }
   if (clippedPoints3.empty()) {
-    polygon->points = clippedPoints3;
+    polygon.clippedPoints = clippedPoints3;
     return;
   }
   // clip right bound
   std::vector<Vector2> clippedPoints4;
-  linePos = clippingRect.p2.x;
+  linePos = rect.p2.x;
   S = *clippedPoints3.begin();
   E = clippedPoints3.begin() + 1;
   for (std::size_t i = 0; i <= clippedPoints3.size(); ++i) {
     if (S.x < linePos && E->x < linePos) {
       clippedPoints4.push_back(*E);
     } else if (S.x >= linePos && E->x < linePos) {
-      I = intersect(S, *E, {clippingRect.p2.x, 0}, {clippingRect.p2.x, ImageH});
+      I = intersect(S, *E, {rect.p2.x, 0}, {rect.p2.x, ImageH});
       clippedPoints4.push_back(I);
       clippedPoints4.push_back(*E);
     } else if (S.x < linePos && E->x >= linePos) {
-      I = intersect(S, *E, {clippingRect.p2.x, 0}, {clippingRect.p2.x, ImageH});
+      I = intersect(S, *E, {rect.p2.x, 0}, {rect.p2.x, ImageH});
       clippedPoints4.push_back(I);
     }
     S = *E;
@@ -218,8 +218,7 @@ void clipPolygon(std::vector<Polygon>::iterator polygon, Rectangle rect) {
       E = clippedPoints3.begin();
     }
   }
-  polygon->points = clippedPoints4;
-  
+  polygon.clippedPoints = clippedPoints4;
 }
 
 void normalizeClippingRect() {
@@ -228,9 +227,10 @@ void normalizeClippingRect() {
 }
 
 void clipPolygons() {
+  std::cout << "clipping Rect: " << clippingRect.p1.x << ", " << clippingRect.p1.y << "; " << clippingRect.p2.x << ", " << clippingRect.p2.y << std::endl;
   normalizeClippingRect();
-  for (auto it = polygons.begin(); it != polygons.end(); ++it)
-    clipPolygon(it, clippingRect);
+  for (auto& polygon : polygons)
+    clipPolygon(polygon, clippingRect);
 }
 
 void drawClippingRect() {
@@ -249,8 +249,8 @@ void display(void) {
   clearFramebuffer();
   glClear(GL_COLOR_BUFFER_BIT);
   for (auto polygon : polygons)
-    if (!polygon.points.empty())
-      scanfill(polygon.points, polygon.color);
+    if (!polygon.clippedPoints.empty())
+      scanfill(polygon.clippedPoints, polygon.color);
   glDrawPixels(ImageW, ImageH, GL_RGB, GL_FLOAT, framebuffer);
   drawPointsBuffer();
   drawClippingRect();
@@ -294,7 +294,7 @@ void mouse(int button, int status, int x, int y) {
       if (mode == Mode::Scanning)
         addToPointsBuffer({ x, y });
       else
-        if (!settingClippingRectP2 && !clip) {
+        if (!settingClippingRectP2) {
           settingClippingRectP2 = true;
           clippingRect.p1 = { x, y };
         }
@@ -314,6 +314,8 @@ void mouse(int button, int status, int x, int y) {
       if (addToPointsBuffer({ x, y })) {
         Color color = randomColor();
         polygons.emplace_back(pointsBuffer, color);
+        polygons.back().clippedPoints = polygons.back().points;
+        clipPolygon(polygons.back(), clippingRect);
         pointsBuffer.clear();
       }
     }
@@ -323,7 +325,7 @@ void mouse(int button, int status, int x, int y) {
 }
 
 void motion(int x, int y) {
-  if (settingClippingRectP2 && !clip) {
+  if (settingClippingRectP2) {
     clippingRect.p2 = { x, y };
     drawingClippingRect = true;
     glutPostRedisplay();
@@ -333,6 +335,8 @@ void motion(int x, int y) {
 void keyboard(unsigned char c, int x, int y) {
   if (pointsBuffer.empty() && c == 'c')
     mode = Mode::Clipping;
+  else if (!settingClippingRectP2)
+    mode = Mode::Scanning;
 }
 
 int main(int argc,  char** argv) {

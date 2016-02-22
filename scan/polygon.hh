@@ -10,6 +10,7 @@ struct Polygon {
     : points(points), color(color) { }
 
   std::vector<Vector2> points;
+  std::vector<Vector2> clippedPoints;
   Color color;
 };
 
