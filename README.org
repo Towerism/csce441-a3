@@ -5,6 +5,7 @@
 - Scan converting input polygons
 - Different Color for each scanned polygon
 - Mode transition to clip mode
+- Mode transition back to scan mode
 - Clip rectangle capture and scan conversion as click and drag
 - Clipping of polygons and scan conversion of clipped polygons
 * Platform
